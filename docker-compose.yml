@@ -1,0 +1,43 @@
+proxy:
+    image: jwilder/nginx-proxy
+    ports:
+        - "80:80"
+        - "443:443"
+        - "3306:3306"
+    volumes:
+        - /var/run/docker.sock:/tmp/docker.sock:ro
+
+nginx:
+    image: cedvan/nginx:1.4.6
+    working_dir: /src
+    environment:
+        VIRTUAL_HOST: "helloword.dev,www.helloword.dev"
+        VIRTUAL_PORT: 80
+        VIRTUAL_PROTO: "http"
+    volumes:
+        - $PATH_PROJECT/docker/nginx/sites-enabled:/etc/nginx/sites-enabled
+        - $PATH_PROJECT/var/logs/nginx:/var/log/nginx
+        - $PATH_PROJECT:/src
+        - /tmp:/tmp
+    links:
+        - phpfpm
+
+phpfpm:
+    image: cedvan/php-fpm:5.6
+    working_dir: /src
+    user: www-data
+    volumes:
+        - $PATH_PROJECT/docker/phpfpm/php.ini:/etc/php5/fpm/php.ini
+        # - $PATH_PROJECT/var/logs/phpfpm:/var/log/php5-fpm
+        - $PATH_PROJECT:/src
+        - /tmp:/tmp
+
+phpcli:
+    image: cedvan/php-cli:5.6
+    working_dir: /src
+    entrypoint: /bin/bash
+    user: www-data
+    volumes:
+        - $PATH_PROJECT/docker/phpcli/php.ini:/etc/php5/cli/php.ini
+        - $PATH_PROJECT:/src
+        - /tmp:/tmp
